@@ -125,15 +125,16 @@ keys.addEventListener('click', e => {
     return;
   }
 
-    // 处理小数点
-    if (action === 'decimal') {
-      if (!displayedNum.includes('.')) {
-        display.textContent = addDecimal(displayedNum);
-      } else if (previousKeyType === 'operator' || previousKeyType === 'calculate') {
-        display.textContent = '0.';
-      }
-      calculator.dataset.previousKeyType = 'decimal';
+  // 小数点
+  if (action === 'decimal') {
+    if (previousKeyType === 'operator' || previousKeyType === 'calculate') {
+      display.textContent = '0.';
+    } else if (!displayedNum.includes('.')) {
+      display.textContent = displayedNum + '.';
     }
+    calculator.dataset.previousKeyType = 'decimal';
+    return;
+  }
 
     // 处理操作符
     if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
