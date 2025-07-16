@@ -109,15 +109,21 @@ keys.addEventListener('click', e => {
     const firstValue = calculator.dataset.firstValue;
     const operator = calculator.dataset.operator;
 
-    // 处理数字键
-    if (!action) {
-      if (displayedNum === '0' || displayedNum === '') {
-        display.textContent = keyContent;
-      } else {
-        display.textContent = appendToDisplay(displayedNum, keyContent);
-      }
-      calculator.dataset.previousKeyType = 'number';
+ // 数字键
+  if (!action) {
+    if (
+      displayedNum === '0' ||
+      previousKeyType === 'operator' ||
+      previousKeyType === 'calculate'
+    ) {
+      display.textContent = keyContent;
+    } else if (displayedNum.length < 12) {
+      // 限制最大长度
+      display.textContent = displayedNum === '0' ? keyContent : displayedNum + keyContent;
     }
+    calculator.dataset.previousKeyType = 'number';
+    return;
+  }
 
     // 处理小数点
     if (action === 'decimal') {
