@@ -28,7 +28,8 @@ const calculate = (n1, operator, n2) => {
   if (operator === 'add') return firstNum + secondNum;
   if (operator === 'subtract') return firstNum - secondNum;
   if (operator === 'multiply') return firstNum * secondNum;
-  if (operator === 'divide') return firstNum / secondNum;
+  if (operator === 'divide') return secondNum === 0 ? 'Error' : firstNum / secondNum;
+  return n2;
 };
 
 // 获取按键类型
