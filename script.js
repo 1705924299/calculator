@@ -69,36 +69,6 @@ const updateCalculatorState = (key, calculator, displayedNum) => {
     return;
   }
 };
-
-  // 处理数字和小数点
-  if (keyType === 'number' || keyType === 'decimal') {
-    if (previousKeyType === 'operator' || previousKeyType === 'calculate') {
-      display.textContent = displayedNum;
-    } else {
-      display.textContent = appendToDisplay(display.textContent, displayedNum);
-    }
-  }
-  // 处理等号
-  if (keyType === 'calculate') {
-    let first = firstValue;
-    let second = displayedNum;
-    let op = operator;
-
-    if (first && op) {
-      if (previousKeyType === 'calculate') {
-        first = displayedNum;
-        second = calculator.dataset.modValue;
-      } else {
-        calculator.dataset.modValue = displayedNum;
-      }
-      const result = calculate(first, op, second);
-      display.textContent = result;
-      calculator.dataset.firstValue = result;
-      calculator.dataset.previousKeyType = 'calculate';
-    }
-    return;
-  }
-
 // 事件监听
 keys.addEventListener('click', e => {
   if (e.target.matches('button')) {
