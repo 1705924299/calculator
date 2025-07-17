@@ -147,6 +147,22 @@ keys.addEventListener('click', e => {
     return;
   }
 
+  // 清除键
+  if (action === 'clear') {
+    if (key.textContent === 'AC') {
+      // 重置所有计算状态
+      calculator.dataset.firstValue = '';
+      calculator.dataset.operator = '';
+      calculator.dataset.previousKeyType = 'clear';
+      display.textContent = '0';  // 重置显示为 0
+    } else {
+      // 处理 CE 情况，只清除显示
+      key.textContent = 'AC';  // 切换为 AC
+      display.textContent = '0'; // 清空显示
+    }
+    return;
+  }
+
     // 计算结果
     if (action === 'calculate') {
       const secondValue = displayedNum;
