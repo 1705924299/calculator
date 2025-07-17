@@ -55,6 +55,7 @@ const updateCalculatorState = (key, calculator, displayedNum) => {
 
   // 重置所有按钮的 depressed 状态
   Array.from(key.parentNode.children).forEach(k => k.classList.remove('is-depressed'));
+  
   // 处理数字和小数点
   if (keyType === 'number' || keyType === 'decimal') {
     if (previousKeyType === 'operator' || previousKeyType === 'calculate') {
@@ -66,15 +67,25 @@ const updateCalculatorState = (key, calculator, displayedNum) => {
 
   // 处理等号
   if (keyType === 'calculate') {
-    const secondValue = display.textContent;
-    if (firstValue && operator) {
-      display.textContent = calculate(firstValue, operator, secondValue);
-      calculator.dataset.firstValue = display.textContent; // 更新 firstValue 为计算结果
+    let first = firstValue;
+    let second = displayedNum;
+    let op = operator;
+
+    if (first && op) {
+      if (previousKeyType === 'calculate') {
+        first = displayedNum;
+        second = calculator.dataset.modValue;
+      } else {
+        calculator.dataset.modValue = displayedNum;
+      }
+      const result = calculate(first, op, second);
+      display.textContent = result;
+      calculator.dataset.firstValue = result;
       calculator.dataset.previousKeyType = 'calculate';
     }
+    return;
   }
 };
-
 
 // 事件监听
 keys.addEventListener('click', e => {
@@ -87,80 +98,86 @@ keys.addEventListener('click', e => {
     const firstValue = calculator.dataset.firstValue;
     const operator = calculator.dataset.operator;
 
- // 数字键
-  if (!action) {
-    if (
-      displayedNum === '0' ||
-      previousKeyType === 'operator' ||
-      previousKeyType === 'calculate'
-    ) {
-      display.textContent = keyContent;
-    } else if (displayedNum.length < 12) {
-      // 限制最大长度
-      display.textContent = displayedNum === '0' ? keyContent : displayedNum + keyContent;
+    // 数字键
+    if (!action) {
+      if (
+        displayedNum === '0' ||
+        previousKeyType === 'operator' ||
+        previousKeyType === 'calculate'
+      ) {
+        display.textContent = keyContent;
+      } else if (displayedNum.length < 12) {
+        // 限制最大长度
+        display.textContent = displayedNum === '0' ? keyContent : displayedNum + keyContent;
+      }
+      calculator.dataset.previousKeyType = 'number';
+      return;
     }
-    calculator.dataset.previousKeyType = 'number';
-    return;
-  }
 
-  // 小数点
-  if (action === 'decimal') {
-    if (previousKeyType === 'operator' || previousKeyType === 'calculate') {
-      display.textContent = '0.';
-    } else if (!displayedNum.includes('.')) {
-      display.textContent = displayedNum + '.';
+    // 小数点
+    if (action === 'decimal') {
+      if (previousKeyType === 'operator' || previousKeyType === 'calculate') {
+        display.textContent = '0.';
+      } else if (!displayedNum.includes('.')) {
+        display.textContent = displayedNum + '.';
+      }
+      calculator.dataset.previousKeyType = 'decimal';
+      return;
     }
-    calculator.dataset.previousKeyType = 'decimal';
-    return;
-  }
 
-  // 操作符
-  if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
-    if (
-      firstValue &&
-      operator &&
-      previousKeyType !== 'operator' &&
-      previousKeyType !== 'calculate'
-    ) {
-      const result = calculate(firstValue, operator, displayedNum);
-      display.textContent = result;
-      calculator.dataset.firstValue = result;
-    } else {
-      calculator.dataset.firstValue = displayedNum;
+    // 操作符
+    if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
+      if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+        const result = calculate(firstValue, operator, displayedNum);
+        display.textContent = result;
+        calculator.dataset.firstValue = result; // 更新为计算结果
+      } else {
+        calculator.dataset.firstValue = displayedNum;
+      }
+      calculator.dataset.operator = action;
+      calculator.dataset.previousKeyType = 'operator';
+      // 按钮高亮
+      Array.from(keys.children).forEach(k => k.classList.remove('is-depressed'));
+      key.classList.add('is-depressed');
+      return;
     }
-    calculator.dataset.operator = action;
-    calculator.dataset.previousKeyType = 'operator';
-    // 按钮高亮
-    Array.from(keys.children).forEach(k => k.classList.remove('is-depressed'));
-    key.classList.add('is-depressed');
-    return;
-  }
 
-  // 清除键
-  if (action === 'clear') {
-    if (key.textContent === 'AC') {
-      // 重置所有计算状态
-      calculator.dataset.firstValue = '';
-      calculator.dataset.operator = '';
-      calculator.dataset.previousKeyType = 'clear';
-      display.textContent = '0';  // 重置显示为 0
-    } else {
-      // 处理 CE 情况，只清除显示
-      key.textContent = 'AC';  // 切换为 AC
-      display.textContent = '0'; // 清空显示
+    // 清除键
+    if (action === 'clear') {
+      if (key.textContent === 'AC') {
+        // 重置所有计算状态
+        calculator.dataset.firstValue = '';
+        calculator.dataset.operator = '';
+        calculator.dataset.previousKeyType = 'clear';
+        key.textContent = 'CE';  // 切换为 CE
+        display.textContent = '0';  // 重置显示为 0
+      } else {
+        // 处理 CE 情况，只清除显示
+        key.textContent = 'AC';  // 切换为 AC
+        display.textContent = '0'; // 清空显示
+      }
+      return;
     }
-    return;
-  }
 
     // 计算结果
     if (action === 'calculate') {
-      const secondValue = displayedNum;
-      if (firstValue && operator) {
-        const result = calculate(firstValue, operator, secondValue);
+      let first = firstValue;
+      let second = displayedNum;
+      let op = operator;
+
+      if (first && op) {
+        if (previousKeyType === 'calculate') {
+          first = displayedNum;
+          second = calculator.dataset.modValue;
+        } else {
+          calculator.dataset.modValue = displayedNum;
+        }
+        const result = calculate(first, op, second);
         display.textContent = result;
-        calculator.dataset.firstValue = result; // 更新 firstValue 为计算结果
+        calculator.dataset.firstValue = result;
         calculator.dataset.previousKeyType = 'calculate';
       }
+      return;
     }
   }
 });
