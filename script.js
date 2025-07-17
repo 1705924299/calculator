@@ -56,18 +56,21 @@ const updateCalculatorState = (key, calculator, displayedNum) => {
   // 重置所有按钮的 depressed 状态
   Array.from(key.parentNode.children).forEach(k => k.classList.remove('is-depressed'));
 
-  // 处理清除按钮
-  if (keyType === 'clear') {
+  // 清除键
+  if (keyType ==='clear') {
     if (key.textContent === 'AC') {
+      // 重置所有计算状态
       calculator.dataset.firstValue = '';
       calculator.dataset.operator = '';
       calculator.dataset.previousKeyType = '';
-      key.textContent = 'CE';
-      display.textContent = '0';
+      key.textContent = 'CE';  // 切换为 CE
+      display.textContent = '0';  // 重置显示为 0
     } else {
-      key.textContent = 'AC';
-      display.textContent = '0';
+      // 处理 CE 情况，只清除显示
+      key.textContent = 'AC';  // 切换为 AC
+      display.textContent = '0';  // 清空显示
     }
+    return;
   }
 
   // 处理数字和小数点
@@ -79,24 +82,17 @@ const updateCalculatorState = (key, calculator, displayedNum) => {
     }
   }
 
-  // 处理操作符
-  if (keyType === 'operator') {
-    calculator.dataset.firstValue = display.textContent;
-    calculator.dataset.operator = key.dataset.action;
-    calculator.dataset.previousKeyType = 'operator';
-    key.classList.add('is-depressed');
-  }
-
   // 处理等号
   if (keyType === 'calculate') {
     const secondValue = display.textContent;
     if (firstValue && operator) {
       display.textContent = calculate(firstValue, operator, secondValue);
-      calculator.dataset.firstValue = display.textContent;
+      calculator.dataset.firstValue = display.textContent; // 更新 firstValue 为计算结果
       calculator.dataset.previousKeyType = 'calculate';
     }
   }
 };
+
 
 // 事件监听
 keys.addEventListener('click', e => {
@@ -136,13 +132,27 @@ keys.addEventListener('click', e => {
     return;
   }
 
-    // 处理操作符
-    if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
+  // 操作符
+  if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
+    if (
+      firstValue &&
+      operator &&
+      previousKeyType !== 'operator' &&
+      previousKeyType !== 'calculate'
+    ) {
+      const result = calculate(firstValue, operator, displayedNum);
+      display.textContent = result;
+      calculator.dataset.firstValue = result;
+    } else {
       calculator.dataset.firstValue = displayedNum;
-      calculator.dataset.operator = action;
-      calculator.dataset.previousKeyType = 'operator';
-      key.classList.add('is-depressed');
     }
+    calculator.dataset.operator = action;
+    calculator.dataset.previousKeyType = 'operator';
+    // 按钮高亮
+    Array.from(keys.children).forEach(k => k.classList.remove('is-depressed'));
+    key.classList.add('is-depressed');
+    return;
+  }
 
     // 计算结果
     if (action === 'calculate') {
