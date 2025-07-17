@@ -55,24 +55,6 @@ const updateCalculatorState = (key, calculator, displayedNum) => {
 
   // 重置所有按钮的 depressed 状态
   Array.from(key.parentNode.children).forEach(k => k.classList.remove('is-depressed'));
-
-  // 清除键
-  if (keyType ==='clear') {
-    if (key.textContent === 'AC') {
-      // 重置所有计算状态
-      calculator.dataset.firstValue = '';
-      calculator.dataset.operator = '';
-      calculator.dataset.previousKeyType = '';
-      key.textContent = 'CE';  // 切换为 CE
-      display.textContent = '0';  // 重置显示为 0
-    } else {
-      // 处理 CE 情况，只清除显示
-      key.textContent = 'AC';  // 切换为 AC
-      display.textContent = '0';  // 清空显示
-    }
-    return;
-  }
-
   // 处理数字和小数点
   if (keyType === 'number' || keyType === 'decimal') {
     if (previousKeyType === 'operator' || previousKeyType === 'calculate') {
@@ -151,6 +133,22 @@ keys.addEventListener('click', e => {
     // 按钮高亮
     Array.from(keys.children).forEach(k => k.classList.remove('is-depressed'));
     key.classList.add('is-depressed');
+    return;
+  }
+
+  // 清除键
+  if (action === 'clear') {
+    if (key.textContent === 'AC') {
+      // 重置所有计算状态
+      calculator.dataset.firstValue = '';
+      calculator.dataset.operator = '';
+      calculator.dataset.previousKeyType = 'clear';
+      display.textContent = '0';  // 重置显示为 0
+    } else {
+      // 处理 CE 情况，只清除显示
+      key.textContent = 'AC';  // 切换为 AC
+      display.textContent = '0'; // 清空显示
+    }
     return;
   }
 
