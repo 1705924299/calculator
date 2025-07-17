@@ -82,7 +82,7 @@ const updateCalculatorState = (key, calculator, displayedNum) => {
     const secondValue = display.textContent;
     if (firstValue && operator) {
       display.textContent = calculate(firstValue, operator, secondValue);
-      calculator.dataset.firstValue = display.textContent;
+      calculator.dataset.firstValue = display.textContent; // 更新 firstValue 为计算结果
       calculator.dataset.previousKeyType = 'calculate';
     }
   }
