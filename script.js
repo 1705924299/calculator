@@ -1,6 +1,7 @@
 const calculator = document.querySelector('.calculator');
 const keys = calculator.querySelector('.calculator__keys');
 const display = document.querySelector('.calculator__display');
+const expressionDisplay = document.querySelector('.calculator__expression');
 
 // 用于检查操作符类型
 const isOperator = (action) => {
@@ -75,34 +76,71 @@ keys.addEventListener('click', e => {
     const key = e.target;
     const action = key.dataset.action;
     const keyContent = key.textContent;
-    const displayedNum = display.textContent;
+    let displayedNum = display.textContent;
     const previousKeyType = calculator.dataset.previousKeyType;
     const firstValue = calculator.dataset.firstValue;
     const operator = calculator.dataset.operator;
+    let expression = calculator.dataset.expression || '';
 
-    // 数字键
-    if (!action) {
-      if (
-        displayedNum === '0' ||
-        previousKeyType === 'operator' ||
-        previousKeyType === 'calculate'
-      ) {
-        display.textContent = keyContent;
-      } else if (displayedNum.length < 12) {
-        // 限制最大长度
-        display.textContent = displayedNum === '0' ? keyContent : displayedNum + keyContent;
-      }
-      calculator.dataset.previousKeyType = 'number';
-      return;
+console.log("action:", action);
+console.log("displayedNum:", displayedNum);
+
+// 数字键
+if (!action) {
+  console.log("进入数字键处理逻辑");
+  if (
+    displayedNum === '0' ||
+    previousKeyType === 'operator' ||
+    previousKeyType === 'calculate'
+  ) {
+    console.log("条件1匹配");
+    display.textContent = keyContent;
+    displayedNum = keyContent;
+  } else {
+    // 检查添加新数字后是否会超过8位
+    const newDisplayedNum = displayedNum + keyContent;
+    if (newDisplayedNum.length <= 8) {
+      console.log("条件2匹配");
+      displayedNum = newDisplayedNum;
+      display.textContent = displayedNum;
     }
+  }
+  // 表达式处理
+  if (
+    displayedNum === '0' ||
+    previousKeyType === 'operator' ||
+    previousKeyType === 'calculate'
+  ) {
+    expression += keyContent;
+  } else {
+    // 只在长度允许时拼接
+    const newDisplayedNum = displayedNum + keyContent;
+    if (newDisplayedNum.length <= 8) {
+      expression += keyContent;
+    }
+  }
+  expressionDisplay.textContent = expression;
+  calculator.dataset.expression = expression;
+  calculator.dataset.previousKeyType = 'number';
+  return;
+}
+
 
     // 小数点
     if (action === 'decimal') {
       if (previousKeyType === 'operator' || previousKeyType === 'calculate') {
         display.textContent = '0.';
-      } else if (!displayedNum.includes('.')) {
+      } else if (!displayedNum.includes('.') && displayedNum.length < 8) {
         display.textContent = displayedNum + '.';
       }
+      // 表达式处理
+      if (previousKeyType === 'operator' || previousKeyType === 'calculate') {
+        expression += '0.';
+      } else if (!displayedNum.includes('.') && displayedNum.length < 8) {
+        expression += '.';
+      }
+      expressionDisplay.textContent = expression;
+      calculator.dataset.expression = expression;
       calculator.dataset.previousKeyType = 'decimal';
       return;
     }
@@ -111,11 +149,28 @@ keys.addEventListener('click', e => {
     if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
       if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
         const result = calculate(firstValue, operator, displayedNum);
-        display.textContent = result;
-        calculator.dataset.firstValue = result; // 更新为计算结果
+        // 限制结果显示长度，最多8位
+        const resultString = result.toString();
+        const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
+        display.textContent = limitedResult;
+        calculator.dataset.firstValue = limitedResult; // 更新为计算结果
       } else {
         calculator.dataset.firstValue = displayedNum;
       }
+      let opSymbol = '';
+      if (action === 'add') opSymbol = '+';
+      if (action === 'subtract') opSymbol = '-';
+      if (action === 'multiply') opSymbol = '×';
+      if (action === 'divide') opSymbol = '÷';
+      // 只在不是连续操作符时拼接
+      if (previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+        expression += opSymbol;
+      } else {
+        // 连续操作符时替换最后一个操作符
+        expression = expression.replace(/[+\-×÷]$/, opSymbol);
+      }
+      expressionDisplay.textContent = expression;
+      calculator.dataset.expression = expression;
       calculator.dataset.operator = action;
       calculator.dataset.previousKeyType = 'operator';
       // 按钮高亮
@@ -138,11 +193,19 @@ keys.addEventListener('click', e => {
         key.textContent = 'AC';  // 切换为 AC
         display.textContent = '0'; // 清空显示
       }
+      expression = '';
+      expressionDisplay.textContent = '';
+      calculator.dataset.expression = '';
       return;
     }
 
     // 计算结果
     if (action === 'calculate') {
+      if (expression && !expression.endsWith('=')) {
+        expression += '=';
+      }
+      expressionDisplay.textContent = expression;
+      calculator.dataset.expression = expression;
       let first = firstValue;
       let second = displayedNum;
       let op = operator;
@@ -155,8 +218,11 @@ keys.addEventListener('click', e => {
           calculator.dataset.modValue = displayedNum;
         }
         const result = calculate(first, op, second);
-        display.textContent = result;
-        calculator.dataset.firstValue = result;
+        // 限制结果显示长度，最多8位
+        const resultString = result.toString();
+        const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
+        display.textContent = limitedResult;
+        calculator.dataset.firstValue = limitedResult;
         calculator.dataset.previousKeyType = 'calculate';
       }
       return;
