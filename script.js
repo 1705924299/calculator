@@ -22,6 +22,15 @@ const addDecimal = (displayedNum) => {
   return displayedNum + '.';
 };
 
+// 获取操作符符号
+const getOperatorSymbol = (action) => {
+  if (action === 'add') return '+';
+  if (action === 'subtract') return '-';
+  if (action === 'multiply') return '×';
+  if (action === 'divide') return '÷';
+  return '';
+};
+
 // 计算加减乘除
 const calculate = (n1, operator, n2) => {
   const firstNum = parseFloat(n1);
@@ -201,28 +210,37 @@ if (!action) {
 
     // 计算结果
     if (action === 'calculate') {
-      if (expression && !expression.endsWith('=')) {
-        expression += '=';
-      }
-      expressionDisplay.textContent = expression;
-      calculator.dataset.expression = expression;
       let first = firstValue;
       let second = displayedNum;
       let op = operator;
 
       if (first && op) {
         if (previousKeyType === 'calculate') {
-          first = displayedNum;
+          // 连续按等号的情况：使用上一次的计算结果作为第一个数，modValue作为第二个数
+          first = calculator.dataset.firstValue; // 使用上一次的计算结果
           second = calculator.dataset.modValue;
         } else {
+          // 第一次按等号：正常显示完整表达式
           calculator.dataset.modValue = displayedNum;
+          if (expression && !expression.endsWith('=')) {
+            expression += '=';
+          }
         }
+        
         const result = calculate(first, op, second);
         // 限制结果显示长度，最多8位
         const resultString = result.toString();
         const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
         display.textContent = limitedResult;
         calculator.dataset.firstValue = limitedResult;
+        
+        // 如果是连续按等号，更新表达式为新的计算
+        if (previousKeyType === 'calculate') {
+          expression = first + getOperatorSymbol(op) + second + '=';
+        }
+        
+        expressionDisplay.textContent = expression;
+        calculator.dataset.expression = expression;
         calculator.dataset.previousKeyType = 'calculate';
       }
       return;
