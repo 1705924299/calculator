@@ -144,10 +144,10 @@ body {
 }
 
 .calculator__keys {
-  background-color: #999;
   display: grid;
   grid-gap: 1px;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr);  /* 保持4列布局 */
+  grid-template-rows: repeat(5, 1fr);  /* 5行（因为添加了3个按钮） */
 }
 
 .calculator__keys > * {
@@ -156,6 +156,7 @@ body {
   position: relative;
   text-align: center;
 }
+
 
 .calculator__keys > *:active::before,
 .calculator__keys > .is-depressed::before {

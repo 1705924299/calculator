@@ -80,6 +80,7 @@ const updateCalculatorState = (key, calculator, displayedNum) => {
   }
 };
 // 事件监听
+// 事件监听
 keys.addEventListener('click', e => {
   if (e.target.matches('button')) {
     const key = e.target;
@@ -90,6 +91,44 @@ keys.addEventListener('click', e => {
     const firstValue = calculator.dataset.firstValue;
     const operator = calculator.dataset.operator;
     let expression = calculator.dataset.expression || '';
+
+    // 1/x
+    if (action === 'reciprocal') {
+      const result = 1 / parseFloat(displayedNum);
+      display.textContent = result;
+      expression = '1/' + displayedNum;
+      expressionDisplay.textContent = expression;
+      calculator.dataset.expression = expression;
+      calculator.dataset.previousKeyType = 'operator';
+      return;
+    }
+
+    // x²
+    if (action === 'square') {
+      const result = Math.pow(parseFloat(displayedNum), 2);
+      display.textContent = result;
+      expression = displayedNum + '²';
+      expressionDisplay.textContent = expression;
+      calculator.dataset.expression = expression;
+      calculator.dataset.previousKeyType = 'operator';
+      return;
+    }
+
+    // √
+    if (action === 'square-root') {
+      const result = Math.sqrt(parseFloat(displayedNum));
+      display.textContent = result;
+      expression = '√' + displayedNum;
+      expressionDisplay.textContent = expression;
+      calculator.dataset.expression = expression;
+      calculator.dataset.previousKeyType = 'operator';
+      return;
+    }
+
+    // 其他操作符和按钮逻辑...
+  }
+});
+
 
 console.log("action:", action);
 console.log("displayedNum:", displayedNum);
@@ -245,5 +284,3 @@ if (!action) {
       }
       return;
     }
-  }
-});
