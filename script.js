@@ -28,8 +28,13 @@ const getOperatorSymbol = (action) => {
   if (action === 'subtract') return '-';
   if (action === 'multiply') return '×';
   if (action === 'divide') return '÷';
+  if (action === 'reciprocal') return '1/x';
+  if (action === 'square') return 'x²';
+  if (action === 'sqrt') return '√x';
+  if (action === 'percent') return '%';
   return '';
 };
+
 
 // 计算加减乘除
 const calculate = (n1, operator, n2) => {
@@ -144,6 +149,10 @@ if (!action) {
     console.log("条件1匹配");
     display.textContent = keyContent;
     displayedNum = keyContent;
+    // 如果是从计算结果开始输入新数字，清除lastFunction
+    if (previousKeyType === 'calculate') {
+      calculator.dataset.lastFunction = '';
+    }
   } else {
     // 检查添加新数字后是否会超过8位
     const newDisplayedNum = displayedNum + keyContent;
@@ -178,6 +187,10 @@ if (!action) {
     if (action === 'decimal') {
       if (previousKeyType === 'operator' || previousKeyType === 'calculate') {
         display.textContent = '0.';
+        // 如果是从计算结果开始输入小数点，清除lastFunction
+        if (previousKeyType === 'calculate') {
+          calculator.dataset.lastFunction = '';
+        }
       } else if (!displayedNum.includes('.') && displayedNum.length < 8) {
         display.textContent = displayedNum + '.';
       }
@@ -221,6 +234,8 @@ if (!action) {
       calculator.dataset.expression = expression;
       calculator.dataset.operator = action;
       calculator.dataset.previousKeyType = 'operator';
+      // 清除lastFunction，因为这是双操作数运算
+      calculator.dataset.lastFunction = '';
       // 按钮高亮
       Array.from(keys.children).forEach(k => k.classList.remove('is-depressed'));
       key.classList.add('is-depressed');
@@ -234,6 +249,7 @@ if (!action) {
         calculator.dataset.firstValue = '';
         calculator.dataset.operator = '';
         calculator.dataset.previousKeyType = 'clear';
+        calculator.dataset.lastFunction = '';
         key.textContent = 'CE';  // 切换为 CE
         display.textContent = '0';  // 重置显示为 0
       } else {
@@ -247,12 +263,160 @@ if (!action) {
       return;
     }
 
+    // 倒数 (1/x)
+    if (action === 'reciprocal') {
+      if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'reciprocal') {
+        calculator.dataset.lastFunction = '';
+      }
+      const num = parseFloat(displayedNum);
+      if (num === 0) {
+        display.textContent = 'Error';
+        expression = 'Error';
+      } else {
+        const result = 1 / num;
+        const resultString = result.toString();
+        const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
+        display.textContent = limitedResult;
+        expression = `1/(${displayedNum})=`;
+      }
+      expressionDisplay.textContent = expression;
+      calculator.dataset.expression = expression;
+      calculator.dataset.firstValue = limitedResult;
+      calculator.dataset.previousKeyType = 'reciprocal';
+      calculator.dataset.lastFunction = 'reciprocal';
+      // 清除操作符，因为这是单操作数函数
+      calculator.dataset.operator = '';
+      return;
+    }
+
+    // 平方 (x²)
+    if (action === 'square') {
+      if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'square') {
+        calculator.dataset.lastFunction = '';
+      }
+      const num = parseFloat(displayedNum);
+      const result = num * num;
+      const resultString = result.toString();
+      const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
+      display.textContent = limitedResult;
+      expression = `(${displayedNum})²=`;
+      expressionDisplay.textContent = expression;
+      calculator.dataset.expression = expression;
+      calculator.dataset.firstValue = limitedResult;
+      calculator.dataset.previousKeyType = 'square';
+      calculator.dataset.lastFunction = 'square';
+      // 清除操作符，因为这是单操作数函数
+      calculator.dataset.operator = '';
+      return;
+    }
+
+    // 开根号 (√x)
+    if (action === 'sqrt') {
+      if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'sqrt') {
+        calculator.dataset.lastFunction = '';
+      }
+      const num = parseFloat(displayedNum);
+      if (num < 0) {
+        display.textContent = 'Error';
+        expression = 'Error';
+      } else {
+        const result = Math.sqrt(num);
+        const resultString = result.toString();
+        const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
+        display.textContent = limitedResult;
+        expression = `√(${displayedNum})=`;
+      }
+      expressionDisplay.textContent = expression;
+      calculator.dataset.expression = expression;
+      calculator.dataset.firstValue = limitedResult;
+      calculator.dataset.previousKeyType = 'sqrt';
+      calculator.dataset.lastFunction = 'sqrt';
+      // 清除操作符，因为这是单操作数函数
+      calculator.dataset.operator = '';
+      return;
+    }
+
+    // 百分比 (%)
+    if (action === 'percent') {
+      if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'percent') {
+        calculator.dataset.lastFunction = '';
+      }
+      const num = parseFloat(displayedNum);
+      const result = num / 100;
+      const resultString = result.toString();
+      const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
+      display.textContent = limitedResult;
+      expression = `${displayedNum}%=`;
+      expressionDisplay.textContent = expression;
+      calculator.dataset.expression = expression;
+      calculator.dataset.firstValue = limitedResult;
+      calculator.dataset.previousKeyType = 'percent';
+      calculator.dataset.lastFunction = 'percent';
+      // 清除操作符，因为这是单操作数函数
+      calculator.dataset.operator = '';
+      return;
+    }
+
     // 计算结果
     if (action === 'calculate') {
       let first = firstValue;
       let second = displayedNum;
       let op = operator;
+      const lastFunction = calculator.dataset.lastFunction;
 
+      // 处理单操作数函数的连续按等号
+      if ((previousKeyType === 'calculate' || ['reciprocal','square','sqrt','percent'].includes(previousKeyType)) && lastFunction && !op) {
+        const currentNum = parseFloat(display.textContent); // 关键修正
+        let result;
+        let newExpression;
+        
+        if (lastFunction === 'reciprocal') {
+          if (currentNum === 0) {
+            display.textContent = 'Error';
+            expression = 'Error';
+          } else {
+            result = 1 / currentNum;
+            const resultString = result.toString();
+            const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
+            display.textContent = limitedResult;
+            newExpression = `1/(${displayedNum})=`;
+          }
+        } else if (lastFunction === 'square') {
+          result = currentNum * currentNum;
+          const resultString = result.toString();
+          const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
+          display.textContent = limitedResult;
+          newExpression = `(${displayedNum})²=`;
+        } else if (lastFunction === 'sqrt') {
+          if (currentNum < 0) {
+            display.textContent = 'Error';
+            expression = 'Error';
+          } else {
+            result = Math.sqrt(currentNum);
+            const resultString = result.toString();
+            const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
+            display.textContent = limitedResult;
+            newExpression = `√(${displayedNum})=`;
+          }
+        } else if (lastFunction === 'percent') {
+          result = currentNum / 100;
+          const resultString = result.toString();
+          const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
+          display.textContent = limitedResult;
+          newExpression = `${displayedNum}%=`;
+        }
+        
+        if (newExpression) {
+          expression = newExpression;
+          expressionDisplay.textContent = expression;
+          calculator.dataset.expression = expression;
+        }
+        calculator.dataset.firstValue = display.textContent;
+        calculator.dataset.previousKeyType = lastFunction;
+        return;
+      }
+
+      // 处理双操作数运算
       if (first && op) {
         if (previousKeyType === 'calculate') {
           // 连续按等号的情况：使用上一次的计算结果作为第一个数，modValue作为第二个数
@@ -281,6 +445,8 @@ if (!action) {
         expressionDisplay.textContent = expression;
         calculator.dataset.expression = expression;
         calculator.dataset.previousKeyType = 'calculate';
+        // 清除lastFunction，因为这是双操作数运算
+        calculator.dataset.lastFunction = '';
       }
       return;
     }

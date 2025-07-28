@@ -146,8 +146,8 @@ body {
 .calculator__keys {
   display: grid;
   grid-gap: 1px;
-  grid-template-columns: repeat(4, 1fr);  /* 保持4列布局 */
-  grid-template-rows: repeat(5, 1fr);  /* 5行（因为添加了3个按钮） */
+  grid-template-columns: repeat(4, 1fr); /* 保持4列布局 */
+  grid-template-rows: repeat(6, 1fr); /* 6行布局，因为我们添加了额外的4个按钮 */
 }
 
 .calculator__keys > * {
