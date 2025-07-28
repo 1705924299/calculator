@@ -193,9 +193,6 @@ keys.addEventListener('click', e => {
       calculator.dataset.previousKeyType = 'operator';
       // 清除lastFunction，因为这是双操作数运算
       calculator.dataset.lastFunction = '';
-      // 按钮高亮
-      Array.from(keys.children).forEach(k => k.classList.remove('is-depressed'));
-      key.classList.add('is-depressed');
       return;
     }
 
@@ -225,7 +222,20 @@ keys.addEventListener('click', e => {
       if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'reciprocal') {
         calculator.dataset.lastFunction = '';
       }
-      const num = parseFloat(displayedNum);
+      
+      // 如果有未完成的双操作数运算，先计算结果
+      let numToReciprocal = displayedNum;
+      if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+        const tempResult = calculate(firstValue, operator, displayedNum);
+        const tempResultString = tempResult.toString();
+        const tempLimitedResult = tempResultString.length > 8 ? parseFloat(tempResult).toPrecision(8) : tempResultString;
+        numToReciprocal = tempLimitedResult;
+        display.textContent = tempLimitedResult;
+        // 更新表达式为计算结果
+        expression = tempLimitedResult;
+      }
+      
+      const num = parseFloat(numToReciprocal);
       if (num === 0) {
         display.textContent = 'Error';
         expression = 'Error';
@@ -234,7 +244,7 @@ keys.addEventListener('click', e => {
         const resultString = result.toString();
         const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
         display.textContent = limitedResult;
-        expression = `1/(${displayedNum})=`;
+        expression = `1/(${numToReciprocal})=`;
       }
       expressionDisplay.textContent = expression;
       calculator.dataset.expression = expression;
@@ -251,12 +261,25 @@ keys.addEventListener('click', e => {
       if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'square') {
         calculator.dataset.lastFunction = '';
       }
-      const num = parseFloat(displayedNum);
+      
+      // 如果有未完成的双操作数运算，先计算结果
+      let numToSquare = displayedNum;
+      if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+        const tempResult = calculate(firstValue, operator, displayedNum);
+        const tempResultString = tempResult.toString();
+        const tempLimitedResult = tempResultString.length > 8 ? parseFloat(tempResult).toPrecision(8) : tempResultString;
+        numToSquare = tempLimitedResult;
+        display.textContent = tempLimitedResult;
+        // 更新表达式为计算结果
+        expression = tempLimitedResult;
+      }
+      
+      const num = parseFloat(numToSquare);
       const result = num * num;
       const resultString = result.toString();
       const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
       display.textContent = limitedResult;
-      expression = `(${displayedNum})²=`;
+      expression = `(${numToSquare})²=`;
       expressionDisplay.textContent = expression;
       calculator.dataset.expression = expression;
       calculator.dataset.firstValue = limitedResult;
@@ -272,7 +295,20 @@ keys.addEventListener('click', e => {
       if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'sqrt') {
         calculator.dataset.lastFunction = '';
       }
-      const num = parseFloat(displayedNum);
+      
+      // 如果有未完成的双操作数运算，先计算结果
+      let numToSqrt = displayedNum;
+      if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+        const tempResult = calculate(firstValue, operator, displayedNum);
+        const tempResultString = tempResult.toString();
+        const tempLimitedResult = tempResultString.length > 8 ? parseFloat(tempResult).toPrecision(8) : tempResultString;
+        numToSqrt = tempLimitedResult;
+        display.textContent = tempLimitedResult;
+        // 更新表达式为计算结果
+        expression = tempLimitedResult;
+      }
+      
+      const num = parseFloat(numToSqrt);
       if (num < 0) {
         display.textContent = 'Error';
         expression = 'Error';
@@ -281,7 +317,7 @@ keys.addEventListener('click', e => {
         const resultString = result.toString();
         const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
         display.textContent = limitedResult;
-        expression = `√(${displayedNum})=`;
+        expression = `√(${numToSqrt})=`;
       }
       expressionDisplay.textContent = expression;
       calculator.dataset.expression = expression;
@@ -298,12 +334,25 @@ keys.addEventListener('click', e => {
       if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'percent') {
         calculator.dataset.lastFunction = '';
       }
-      const num = parseFloat(displayedNum);
+      
+      // 如果有未完成的双操作数运算，先计算结果
+      let numToPercent = displayedNum;
+      if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+        const tempResult = calculate(firstValue, operator, displayedNum);
+        const tempResultString = tempResult.toString();
+        const tempLimitedResult = tempResultString.length > 8 ? parseFloat(tempResult).toPrecision(8) : tempResultString;
+        numToPercent = tempLimitedResult;
+        display.textContent = tempLimitedResult;
+        // 更新表达式为计算结果
+        expression = tempLimitedResult;
+      }
+      
+      const num = parseFloat(numToPercent);
       const result = num / 100;
       const resultString = result.toString();
       const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
       display.textContent = limitedResult;
-      expression = `${displayedNum}%=`;
+      expression = `${numToPercent}%=`;
       expressionDisplay.textContent = expression;
       calculator.dataset.expression = expression;
       calculator.dataset.firstValue = limitedResult;
@@ -370,8 +419,6 @@ keys.addEventListener('click', e => {
         }
         calculator.dataset.firstValue = display.textContent;
         calculator.dataset.previousKeyType = lastFunction;
-        // 重置所有按钮的高亮状态
-        Array.from(keys.children).forEach(k => k.classList.remove('is-depressed'));
         return;
       }
 
@@ -406,8 +453,6 @@ keys.addEventListener('click', e => {
         calculator.dataset.previousKeyType = 'calculate';
         // 清除lastFunction，因为这是双操作数运算
         calculator.dataset.lastFunction = '';
-        // 重置所有按钮的高亮状态
-        Array.from(keys.children).forEach(k => k.classList.remove('is-depressed'));
       }
       return;
     }
