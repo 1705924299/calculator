@@ -72,17 +72,7 @@ const updateCalculatorState = (key, calculator, displayedNum) => {
   Array.from(key.parentNode.children).forEach(k => k.classList.remove('is-depressed'));
   
 
-  // 清除
-  if (action === 'clear') {
-    display.textContent = '0';
-    calculator.dataset.firstValue = '';
-    calculator.dataset.operator = '';
-    calculator.dataset.modValue = '';
-    calculator.dataset.previousKeyType = '';
-    Array.from(keys.children).forEach(k => k.classList.remove('is-depressed'));
-    key.textContent = 'AC';
-    return;
-  }
+
 };
 // 事件监听
 // 事件监听
@@ -97,91 +87,54 @@ keys.addEventListener('click', e => {
     const operator = calculator.dataset.operator;
     let expression = calculator.dataset.expression || '';
 
-    // 1/x
-    if (action === 'reciprocal') {
-      const result = 1 / parseFloat(displayedNum);
-      display.textContent = result;
-      expression = '1/' + displayedNum;
-      expressionDisplay.textContent = expression;
-      calculator.dataset.expression = expression;
-      calculator.dataset.previousKeyType = 'operator';
-      return;
-    }
-
-    // x²
-    if (action === 'square') {
-      const result = Math.pow(parseFloat(displayedNum), 2);
-      display.textContent = result;
-      expression = displayedNum + '²';
-      expressionDisplay.textContent = expression;
-      calculator.dataset.expression = expression;
-      calculator.dataset.previousKeyType = 'operator';
-      return;
-    }
-
-    // √
-    if (action === 'square-root') {
-      const result = Math.sqrt(parseFloat(displayedNum));
-      display.textContent = result;
-      expression = '√' + displayedNum;
-      expressionDisplay.textContent = expression;
-      calculator.dataset.expression = expression;
-      calculator.dataset.previousKeyType = 'operator';
-      return;
-    }
-
     // 其他操作符和按钮逻辑...
-  }
-});
+    
+    console.log("action:", action);
+    console.log("displayedNum:", displayedNum);
 
-
-console.log("action:", action);
-console.log("displayedNum:", displayedNum);
-
-// 数字键
-if (!action) {
-  console.log("进入数字键处理逻辑");
-  if (
-    displayedNum === '0' ||
-    previousKeyType === 'operator' ||
-    previousKeyType === 'calculate'
-  ) {
-    console.log("条件1匹配");
-    display.textContent = keyContent;
-    displayedNum = keyContent;
-    // 如果是从计算结果开始输入新数字，清除lastFunction
-    if (previousKeyType === 'calculate') {
-      calculator.dataset.lastFunction = '';
+    // 数字键
+    if (!action) {
+      console.log("进入数字键处理逻辑");
+      if (
+        displayedNum === '0' ||
+        previousKeyType === 'operator' ||
+        previousKeyType === 'calculate'
+      ) {
+        console.log("条件1匹配");
+        display.textContent = keyContent;
+        displayedNum = keyContent;
+        // 如果是从计算结果开始输入新数字，清除lastFunction
+        if (previousKeyType === 'calculate') {
+          calculator.dataset.lastFunction = '';
+        }
+      } else {
+        // 检查添加新数字后是否会超过8位
+        const newDisplayedNum = displayedNum + keyContent;
+        if (newDisplayedNum.length <= 8) {
+          console.log("条件2匹配");
+          displayedNum = newDisplayedNum;
+          display.textContent = displayedNum;
+        }
+      }
+      // 表达式处理
+      if (
+        displayedNum === '0' ||
+        previousKeyType === 'operator' ||
+        previousKeyType === 'calculate'
+      ) {
+        expression += keyContent;
+      } else {
+        // 只在长度允许时拼接
+        const newDisplayedNum = displayedNum + keyContent;
+        if (newDisplayedNum.length <= 8) {
+          expression += keyContent;
+        }
+      }
+      expressionDisplay.textContent = expression;
+      calculator.dataset.expression = expression;
+      calculator.dataset.previousKeyType = 'number';
+      return;
     }
-  } else {
-    // 检查添加新数字后是否会超过8位
-    const newDisplayedNum = displayedNum + keyContent;
-    if (newDisplayedNum.length <= 8) {
-      console.log("条件2匹配");
-      displayedNum = newDisplayedNum;
-      display.textContent = displayedNum;
-    }
-  }
-  // 表达式处理
-  if (
-    displayedNum === '0' ||
-    previousKeyType === 'operator' ||
-    previousKeyType === 'calculate'
-  ) {
-    expression += keyContent;
-  } else {
-    // 只在长度允许时拼接
-    const newDisplayedNum = displayedNum + keyContent;
-    if (newDisplayedNum.length <= 8) {
-      expression += keyContent;
-    }
-  }
-  expressionDisplay.textContent = expression;
-  calculator.dataset.expression = expression;
-  calculator.dataset.previousKeyType = 'number';
-  return;
-}
-
 
     // 小数点
     if (action === 'decimal') {
@@ -208,27 +161,31 @@ if (!action) {
 
     // 操作符
     if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
+      let opSymbol = '';
+      if (action === 'add') opSymbol = '+';
+      if (action === 'subtract') opSymbol = '-';
+      if (action === 'multiply') opSymbol = '×';
+      if (action === 'divide') opSymbol = '÷';
+      
       if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+        // 需要先计算前面的表达式
         const result = calculate(firstValue, operator, displayedNum);
         // 限制结果显示长度，最多8位
         const resultString = result.toString();
         const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
         display.textContent = limitedResult;
         calculator.dataset.firstValue = limitedResult; // 更新为计算结果
+        // 更新表达式为计算结果 + 新操作符
+        expression = limitedResult + opSymbol;
       } else {
         calculator.dataset.firstValue = displayedNum;
-      }
-      let opSymbol = '';
-      if (action === 'add') opSymbol = '+';
-      if (action === 'subtract') opSymbol = '-';
-      if (action === 'multiply') opSymbol = '×';
-      if (action === 'divide') opSymbol = '÷';
-      // 只在不是连续操作符时拼接
-      if (previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
-        expression += opSymbol;
-      } else {
-        // 连续操作符时替换最后一个操作符
-        expression = expression.replace(/[+\-×÷]$/, opSymbol);
+        // 只在不是连续操作符时拼接
+        if (previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+          expression += opSymbol;
+        } else {
+          // 连续操作符时替换最后一个操作符
+          expression = expression.replace(/[+\-×÷]$/, opSymbol);
+        }
       }
       expressionDisplay.textContent = expression;
       calculator.dataset.expression = expression;
@@ -379,14 +336,14 @@ if (!action) {
             const resultString = result.toString();
             const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
             display.textContent = limitedResult;
-            newExpression = `1/(${displayedNum})=`;
+            newExpression = `1/(${display.textContent})=`;
           }
         } else if (lastFunction === 'square') {
           result = currentNum * currentNum;
           const resultString = result.toString();
           const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
           display.textContent = limitedResult;
-          newExpression = `(${displayedNum})²=`;
+                      newExpression = `(${display.textContent})²=`;
         } else if (lastFunction === 'sqrt') {
           if (currentNum < 0) {
             display.textContent = 'Error';
@@ -396,14 +353,14 @@ if (!action) {
             const resultString = result.toString();
             const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
             display.textContent = limitedResult;
-            newExpression = `√(${displayedNum})=`;
+            newExpression = `√(${display.textContent})=`;
           }
         } else if (lastFunction === 'percent') {
           result = currentNum / 100;
           const resultString = result.toString();
           const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
           display.textContent = limitedResult;
-          newExpression = `${displayedNum}%=`;
+          newExpression = `${display.textContent}%=`;
         }
         
         if (newExpression) {
@@ -413,6 +370,8 @@ if (!action) {
         }
         calculator.dataset.firstValue = display.textContent;
         calculator.dataset.previousKeyType = lastFunction;
+        // 重置所有按钮的高亮状态
+        Array.from(keys.children).forEach(k => k.classList.remove('is-depressed'));
         return;
       }
 
@@ -447,6 +406,10 @@ if (!action) {
         calculator.dataset.previousKeyType = 'calculate';
         // 清除lastFunction，因为这是双操作数运算
         calculator.dataset.lastFunction = '';
+        // 重置所有按钮的高亮状态
+        Array.from(keys.children).forEach(k => k.classList.remove('is-depressed'));
       }
       return;
     }
+  }
+});
