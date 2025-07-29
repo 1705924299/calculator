@@ -59,11 +59,9 @@ const getKeyType = (key) => {
 };
 
 // 更新计算器状态
-const updateCalculatorState = (key, calculator, displayedNum) => {
+const updateCalculatorState = (key, calculator) => {
   const keyType = getKeyType(key);
-  const previousKeyType = calculator.dataset.previousKeyType;
-  const firstValue = calculator.dataset.firstValue;
-  const operator = calculator.dataset.operator;
+
 
   // 更新 previousKeyType
   calculator.dataset.previousKeyType = keyType;
@@ -161,40 +159,40 @@ keys.addEventListener('click', e => {
 
     // 操作符
     if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
-      let opSymbol = '';
-      if (action === 'add') opSymbol = '+';
-      if (action === 'subtract') opSymbol = '-';
-      if (action === 'multiply') opSymbol = '×';
-      if (action === 'divide') opSymbol = '÷';
-      
-      if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
-        // 需要先计算前面的表达式
-        const result = calculate(firstValue, operator, displayedNum);
-        // 限制结果显示长度，最多8位
-        const resultString = result.toString();
-        const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
-        display.textContent = limitedResult;
-        calculator.dataset.firstValue = limitedResult; // 更新为计算结果
-        // 更新表达式为计算结果 + 新操作符
-        expression = limitedResult + opSymbol;
-      } else {
-        calculator.dataset.firstValue = displayedNum;
-        // 只在不是连续操作符时拼接
-        if (previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
-          expression += opSymbol;
-        } else {
-          // 连续操作符时替换最后一个操作符
-          expression = expression.replace(/[+\-×÷]$/, opSymbol);
-        }
-      }
-      expressionDisplay.textContent = expression;
-      calculator.dataset.expression = expression;
-      calculator.dataset.operator = action;
-      calculator.dataset.previousKeyType = 'operator';
-      // 清除lastFunction，因为这是双操作数运算
-      calculator.dataset.lastFunction = '';
-      return;
+  let opSymbol = '';
+  if (action === 'add') opSymbol = '+';
+  if (action === 'subtract') opSymbol = '-';
+  if (action === 'multiply') opSymbol = '×';
+  if (action === 'divide') opSymbol = '÷';
+  
+  if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+    // 需要先计算前面的表达式
+    const result = calculate(firstValue, operator, displayedNum);
+    // 使用formatResult函数来限制显示长度
+    const limitedResult = formatResult(result);
+    display.textContent = limitedResult;
+    calculator.dataset.firstValue = limitedResult; // 更新为计算结果
+    // 更新表达式为计算结果 + 新操作符
+    expression = limitedResult + opSymbol;
+  } else {
+    calculator.dataset.firstValue = displayedNum;
+    // 只在不是连续操作符时拼接
+    if (previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+      expression += opSymbol;
+    } else {
+      // 连续操作符时替换最后一个操作符
+      expression = expression.replace(/[+\-×÷]$/, opSymbol);
     }
+  }
+  expressionDisplay.textContent = expression;
+  calculator.dataset.expression = expression;
+  calculator.dataset.operator = action;
+  calculator.dataset.previousKeyType = 'operator';
+  // 清除lastFunction，因为这是双操作数运算
+  calculator.dataset.lastFunction = '';
+  return;
+}
+
 
     // 清除键
     if (action === 'clear') {
@@ -216,245 +214,206 @@ keys.addEventListener('click', e => {
       calculator.dataset.expression = '';
       return;
     }
+// 限制结果显示长度，最多8位
+function formatResult(result) {
+  const resultString = result.toString();
+  return resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
+}
 
-    // 倒数 (1/x)
-    if (action === 'reciprocal') {
-      if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'reciprocal') {
-        calculator.dataset.lastFunction = '';
-      }
-      
-      // 如果有未完成的双操作数运算，先计算结果
-      let numToReciprocal = displayedNum;
-      if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
-        const tempResult = calculate(firstValue, operator, displayedNum);
-        const tempResultString = tempResult.toString();
-        const tempLimitedResult = tempResultString.length > 8 ? parseFloat(tempResult).toPrecision(8) : tempResultString;
-        numToReciprocal = tempLimitedResult;
-        display.textContent = tempLimitedResult;
-        // 更新表达式为计算结果
-        expression = tempLimitedResult;
-      }
-      
-      const num = parseFloat(numToReciprocal);
-      if (num === 0) {
-        display.textContent = 'Error';
-        expression = 'Error';
-      } else {
-        const result = 1 / num;
-        const resultString = result.toString();
-        const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
-        display.textContent = limitedResult;
-        expression = `1/(${numToReciprocal})=`;
-      }
-      expressionDisplay.textContent = expression;
-      calculator.dataset.expression = expression;
-      calculator.dataset.firstValue = limitedResult;
-      calculator.dataset.previousKeyType = 'reciprocal';
-      calculator.dataset.lastFunction = 'reciprocal';
-      // 清除操作符，因为这是单操作数函数
-      calculator.dataset.operator = '';
-      return;
-    }
-
-    // 平方 (x²)
-    if (action === 'square') {
-      if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'square') {
-        calculator.dataset.lastFunction = '';
-      }
-      
-      // 如果有未完成的双操作数运算，先计算结果
-      let numToSquare = displayedNum;
-      if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
-        const tempResult = calculate(firstValue, operator, displayedNum);
-        const tempResultString = tempResult.toString();
-        const tempLimitedResult = tempResultString.length > 8 ? parseFloat(tempResult).toPrecision(8) : tempResultString;
-        numToSquare = tempLimitedResult;
-        display.textContent = tempLimitedResult;
-        // 更新表达式为计算结果
-        expression = tempLimitedResult;
-      }
-      
-      const num = parseFloat(numToSquare);
-      const result = num * num;
-      const resultString = result.toString();
-      const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
-      display.textContent = limitedResult;
-      expression = `(${numToSquare})²=`;
-      expressionDisplay.textContent = expression;
-      calculator.dataset.expression = expression;
-      calculator.dataset.firstValue = limitedResult;
-      calculator.dataset.previousKeyType = 'square';
-      calculator.dataset.lastFunction = 'square';
-      // 清除操作符，因为这是单操作数函数
-      calculator.dataset.operator = '';
-      return;
-    }
-
-    // 开根号 (√x)
-    if (action === 'sqrt') {
-      if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'sqrt') {
-        calculator.dataset.lastFunction = '';
-      }
-      
-      // 如果有未完成的双操作数运算，先计算结果
-      let numToSqrt = displayedNum;
-      if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
-        const tempResult = calculate(firstValue, operator, displayedNum);
-        const tempResultString = tempResult.toString();
-        const tempLimitedResult = tempResultString.length > 8 ? parseFloat(tempResult).toPrecision(8) : tempResultString;
-        numToSqrt = tempLimitedResult;
-        display.textContent = tempLimitedResult;
-        // 更新表达式为计算结果
-        expression = tempLimitedResult;
-      }
-      
-      const num = parseFloat(numToSqrt);
-      if (num < 0) {
-        display.textContent = 'Error';
-        expression = 'Error';
-      } else {
-        const result = Math.sqrt(num);
-        const resultString = result.toString();
-        const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
-        display.textContent = limitedResult;
-        expression = `√(${numToSqrt})=`;
-      }
-      expressionDisplay.textContent = expression;
-      calculator.dataset.expression = expression;
-      calculator.dataset.firstValue = limitedResult;
-      calculator.dataset.previousKeyType = 'sqrt';
-      calculator.dataset.lastFunction = 'sqrt';
-      // 清除操作符，因为这是单操作数函数
-      calculator.dataset.operator = '';
-      return;
-    }
-
-    // 百分比 (%)
-    if (action === 'percent') {
-      if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'percent') {
-        calculator.dataset.lastFunction = '';
-      }
-      
-      // 如果有未完成的双操作数运算，先计算结果
-      let numToPercent = displayedNum;
-      if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
-        const tempResult = calculate(firstValue, operator, displayedNum);
-        const tempResultString = tempResult.toString();
-        const tempLimitedResult = tempResultString.length > 8 ? parseFloat(tempResult).toPrecision(8) : tempResultString;
-        numToPercent = tempLimitedResult;
-        display.textContent = tempLimitedResult;
-        // 更新表达式为计算结果
-        expression = tempLimitedResult;
-      }
-      
-      const num = parseFloat(numToPercent);
-      const result = num / 100;
-      const resultString = result.toString();
-      const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
-      display.textContent = limitedResult;
-      expression = `${numToPercent}%=`;
-      expressionDisplay.textContent = expression;
-      calculator.dataset.expression = expression;
-      calculator.dataset.firstValue = limitedResult;
-      calculator.dataset.previousKeyType = 'percent';
-      calculator.dataset.lastFunction = 'percent';
-      // 清除操作符，因为这是单操作数函数
-      calculator.dataset.operator = '';
-      return;
-    }
-
-    // 计算结果
-    if (action === 'calculate') {
-      let first = firstValue;
-      let second = displayedNum;
-      let op = operator;
-      const lastFunction = calculator.dataset.lastFunction;
-
-      // 处理单操作数函数的连续按等号
-      if ((previousKeyType === 'calculate' || ['reciprocal','square','sqrt','percent'].includes(previousKeyType)) && lastFunction && !op) {
-        const currentNum = parseFloat(display.textContent); // 关键修正
-        let result;
-        let newExpression;
-        
-        if (lastFunction === 'reciprocal') {
-          if (currentNum === 0) {
-            display.textContent = 'Error';
-            expression = 'Error';
-          } else {
-            result = 1 / currentNum;
-            const resultString = result.toString();
-            const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
-            display.textContent = limitedResult;
-            newExpression = `1/(${display.textContent})=`;
-          }
-        } else if (lastFunction === 'square') {
-          result = currentNum * currentNum;
-          const resultString = result.toString();
-          const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
-          display.textContent = limitedResult;
-                      newExpression = `(${display.textContent})²=`;
-        } else if (lastFunction === 'sqrt') {
-          if (currentNum < 0) {
-            display.textContent = 'Error';
-            expression = 'Error';
-          } else {
-            result = Math.sqrt(currentNum);
-            const resultString = result.toString();
-            const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
-            display.textContent = limitedResult;
-            newExpression = `√(${display.textContent})=`;
-          }
-        } else if (lastFunction === 'percent') {
-          result = currentNum / 100;
-          const resultString = result.toString();
-          const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
-          display.textContent = limitedResult;
-          newExpression = `${display.textContent}%=`;
-        }
-        
-        if (newExpression) {
-          expression = newExpression;
-          expressionDisplay.textContent = expression;
-          calculator.dataset.expression = expression;
-        }
-        calculator.dataset.firstValue = display.textContent;
-        calculator.dataset.previousKeyType = lastFunction;
-        return;
-      }
-
-      // 处理双操作数运算
-      if (first && op) {
-        if (previousKeyType === 'calculate') {
-          // 连续按等号的情况：使用上一次的计算结果作为第一个数，modValue作为第二个数
-          first = calculator.dataset.firstValue; // 使用上一次的计算结果
-          second = calculator.dataset.modValue;
-        } else {
-          // 第一次按等号：正常显示完整表达式
-          calculator.dataset.modValue = displayedNum;
-          if (expression && !expression.endsWith('=')) {
-            expression += '=';
-          }
-        }
-        
-        const result = calculate(first, op, second);
-        // 限制结果显示长度，最多8位
-        const resultString = result.toString();
-        const limitedResult = resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
-        display.textContent = limitedResult;
-        calculator.dataset.firstValue = limitedResult;
-        
-        // 如果是连续按等号，更新表达式为新的计算
-        if (previousKeyType === 'calculate') {
-          expression = first + getOperatorSymbol(op) + second + '=';
-        }
-        
-        expressionDisplay.textContent = expression;
-        calculator.dataset.expression = expression;
-        calculator.dataset.previousKeyType = 'calculate';
-        // 清除lastFunction，因为这是双操作数运算
-        calculator.dataset.lastFunction = '';
-      }
-      return;
-    }
+  // 倒数 (1/x)
+if (action === 'reciprocal') {
+  if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'reciprocal') {
+    calculator.dataset.lastFunction = '';
   }
-});
+  
+  let numToReciprocal = displayedNum;
+  if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+    const tempResult = calculate(firstValue, operator, displayedNum);
+    numToReciprocal = formatResult(tempResult);
+    display.textContent = numToReciprocal;
+    expression = numToReciprocal;
+  }
+  
+  const num = parseFloat(numToReciprocal);
+  if (num === 0) {
+    display.textContent = 'Error';
+    expression = 'Error';
+  } else {
+    const result = 1 / num;
+    display.textContent = formatResult(result);
+    expression = `1/(${numToReciprocal})=`;
+  }
+  expressionDisplay.textContent = expression;
+  calculator.dataset.expression = expression;
+  calculator.dataset.firstValue = formatResult(1 / num);
+  calculator.dataset.previousKeyType = 'reciprocal';
+  calculator.dataset.lastFunction = 'reciprocal';
+  calculator.dataset.operator = '';
+  return;
+}
+
+// 平方 (x²)
+if (action === 'square') {
+  if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'square') {
+    calculator.dataset.lastFunction = '';
+  }
+  
+  let numToSquare = displayedNum;
+  if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+    const tempResult = calculate(firstValue, operator, displayedNum);
+    numToSquare = formatResult(tempResult);
+    display.textContent = numToSquare;
+    expression = numToSquare;
+  }
+  
+  const num = parseFloat(numToSquare);
+  const result = num * num;
+  display.textContent = formatResult(result);
+  expression = `(${numToSquare})²=`;
+  expressionDisplay.textContent = expression;
+  calculator.dataset.expression = expression;
+  calculator.dataset.firstValue = formatResult(result);
+  calculator.dataset.previousKeyType = 'square';
+  calculator.dataset.lastFunction = 'square';
+  calculator.dataset.operator = '';
+  return;
+}
+
+// 开根号 (√x)
+if (action === 'sqrt') {
+  if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'sqrt') {
+    calculator.dataset.lastFunction = '';
+  }
+  
+  let numToSqrt = displayedNum;
+  if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+    const tempResult = calculate(firstValue, operator, displayedNum);
+    numToSqrt = formatResult(tempResult);
+    display.textContent = numToSqrt;
+    expression = numToSqrt;
+  }
+  
+  const num = parseFloat(numToSqrt);
+  if (num < 0) {
+    display.textContent = 'Error';
+    expression = 'Error';
+  } else {
+    const result = Math.sqrt(num);
+    display.textContent = formatResult(result);
+    expression = `√(${numToSqrt})=`;
+  }
+  expressionDisplay.textContent = expression;
+  calculator.dataset.expression = expression;
+  calculator.dataset.firstValue = formatResult(Math.sqrt(num));
+  calculator.dataset.previousKeyType = 'sqrt';
+  calculator.dataset.lastFunction = 'sqrt';
+  calculator.dataset.operator = '';
+  return;
+}
+
+// 百分比 (%)
+if (action === 'percent') {
+  if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'percent') {
+    calculator.dataset.lastFunction = '';
+  }
+  
+  let numToPercent = displayedNum;
+  if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+    const tempResult = calculate(firstValue, operator, displayedNum);
+    numToPercent = formatResult(tempResult);
+    display.textContent = numToPercent;
+    expression = numToPercent;
+  }
+  
+  const num = parseFloat(numToPercent);
+  const result = num / 100;
+  display.textContent = formatResult(result);
+  expression = `${numToPercent}%=`;
+  expressionDisplay.textContent = expression;
+  calculator.dataset.expression = expression;
+  calculator.dataset.firstValue = formatResult(result);
+  calculator.dataset.previousKeyType = 'percent';
+  calculator.dataset.lastFunction = 'percent';
+  calculator.dataset.operator = '';
+  return;
+}
+
+// 计算结果
+if (action === 'calculate') {
+  let first = firstValue;
+  let second = displayedNum;
+  let op = operator;
+  const lastFunction = calculator.dataset.lastFunction;
+
+  // 处理单操作数函数的连续按等号
+  if ((previousKeyType === 'calculate' || ['reciprocal','square','sqrt','percent'].includes(previousKeyType)) && lastFunction && !op) {
+    const currentNum = parseFloat(display.textContent); // 关键修正
+    let result;
+    let newExpression;
+    
+    if (lastFunction === 'reciprocal') {
+      if (currentNum === 0) {
+        display.textContent = 'Error';
+        expression = 'Error';
+      } else {
+        result = 1 / currentNum;
+        display.textContent = formatResult(result);
+        newExpression = `1/(${display.textContent})=`;
+      }
+    } else if (lastFunction === 'square') {
+      result = currentNum * currentNum;
+      display.textContent = formatResult(result);
+      newExpression = `(${display.textContent})²=`;
+    } else if (lastFunction === 'sqrt') {
+      if (currentNum < 0) {
+        display.textContent = 'Error';
+        expression = 'Error';
+      } else {
+        result = Math.sqrt(currentNum);
+        display.textContent = formatResult(result);
+        newExpression = `√(${display.textContent})=`;
+      }
+    } else if (lastFunction === 'percent') {
+      result = currentNum / 100;
+      display.textContent = formatResult(result);
+      newExpression = `${display.textContent}%=`;
+    }
+    
+    if (newExpression) {
+      expression = newExpression;
+      expressionDisplay.textContent = expression;
+      calculator.dataset.expression = expression;
+    }
+    calculator.dataset.firstValue = display.textContent;
+    calculator.dataset.previousKeyType = lastFunction;
+    return;
+  }
+
+  // 处理双操作数运算
+  if (first && op) {
+    if (previousKeyType === 'calculate') {
+      first = calculator.dataset.firstValue; 
+      second = calculator.dataset.modValue;
+    } else {
+      calculator.dataset.modValue = displayedNum;
+      if (expression && !expression.endsWith('=')) {
+        expression += '=';
+      }
+    }
+    
+    const result = calculate(first, op, second);
+    display.textContent = formatResult(result);
+    calculator.dataset.firstValue = formatResult(result);
+    
+    if (previousKeyType === 'calculate') {
+      expression = first + getOperatorSymbol(op) + second + '=';
+    }
+    
+    expressionDisplay.textContent = expression;
+    calculator.dataset.expression = expression;
+    calculator.dataset.previousKeyType = 'calculate';
+    calculator.dataset.lastFunction = '';
+  }
+  return;
+}
+  }})
