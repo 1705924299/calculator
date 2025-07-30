@@ -15,8 +15,6 @@ const getOperatorSymbol = (action) => {
   if (action === 'percent') return '%';
   return '';
 };
-
-
 // 计算加减乘除
 const calculate = (n1, operator, n2) => {
   const firstNum = parseFloat(n1);
@@ -49,21 +47,13 @@ keys.addEventListener('click', e => {
     const firstValue = calculator.dataset.firstValue;
     const operator = calculator.dataset.operator;
     let expression = calculator.dataset.expression || '';
-
-    // 其他操作符和按钮逻辑...
-    
-    console.log("action:", action);
-    console.log("displayedNum:", displayedNum);
-
     // 数字键
     if (!action) {
-      console.log("进入数字键处理逻辑");
       if (
         displayedNum === '0' ||
         previousKeyType === 'operator' ||
         previousKeyType === 'calculate'
       ) {
-        console.log("条件1匹配");
         display.textContent = keyContent;
         displayedNum = keyContent;
         // 如果是从计算结果开始输入新数字，清除lastFunction
@@ -74,7 +64,6 @@ keys.addEventListener('click', e => {
         // 检查添加新数字后是否会超过8位
         const newDisplayedNum = displayedNum + keyContent;
         if (newDisplayedNum.length <= 8) {
-          console.log("条件2匹配");
           displayedNum = newDisplayedNum;
           display.textContent = displayedNum;
         }
@@ -129,7 +118,6 @@ keys.addEventListener('click', e => {
   if (action === 'subtract') opSymbol = '-';
   if (action === 'multiply') opSymbol = '×';
   if (action === 'divide') opSymbol = '÷';
-  
   if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
     // 需要先计算前面的表达式
     const result = calculate(firstValue, operator, displayedNum);
@@ -157,8 +145,6 @@ keys.addEventListener('click', e => {
   calculator.dataset.lastFunction = '';
   return;
 }
-
-
     // 清除键
     if (action === 'clear') {
       if (key.textContent === 'AC') {
@@ -323,7 +309,6 @@ if (action === 'calculate') {
         expression += '=';
       }
     }
-    
     const result = calculate(first, op, second);
     display.textContent = formatResult(result);
     calculator.dataset.firstValue = formatResult(result);
@@ -331,12 +316,10 @@ if (action === 'calculate') {
     if (previousKeyType === 'calculate') {
       expression = first + getOperatorSymbol(op) + second + '=';
     }
-    
     expressionDisplay.textContent = expression;
     calculator.dataset.expression = expression;
     calculator.dataset.previousKeyType = 'calculate';
     calculator.dataset.lastFunction = '';
   }
   return;
-}
-  }})
+}}})
