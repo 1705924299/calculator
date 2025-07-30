@@ -5,21 +5,12 @@ const keys = calculator.querySelector('.calculator__keys');
 const display = document.querySelector('.calculator__display');
 const expressionDisplay = document.querySelector('.calculator__expression');
 
-// 获取按键类型
-const getKeyType = (key) => {
-  const { action } = key.dataset;
-  if (!action) return 'number';
-  if (['add', 'subtract', 'multiply', 'divide'].includes(action)) return 'operator';
-  if (action === 'decimal') return 'decimal';
-  if (action === 'clear') return 'clear';
-  if (action === 'calculate') return 'calculate';
-  return action;
-};
-
 // 通用单操作数函数处理
 function handleSingleOperandOperation(actionType, inputNum, updateState = true) {
   const operation = operations[actionType];
   if (!operation) return;
+
+  let expression = calculator.dataset.expression || '';
 
   if (operation.errorCheck(inputNum)) {
     display.textContent = 'Error';
@@ -79,6 +70,7 @@ keys.addEventListener('click', e => {
     const firstValue = calculator.dataset.firstValue;
     const operator = calculator.dataset.operator;
     let expression = calculator.dataset.expression || '';
+
     // 数字键
     if (!action) {
       if (
@@ -145,38 +137,40 @@ keys.addEventListener('click', e => {
 
     // 操作符
     if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
-  let opSymbol = '';
-  if (action === 'add') opSymbol = '+';
-  if (action === 'subtract') opSymbol = '-';
-  if (action === 'multiply') opSymbol = '×';
-  if (action === 'divide') opSymbol = '÷';
-  if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
-    // 需要先计算前面的表达式
-    const result = calculate(firstValue, operator, displayedNum);
-    // 使用formatResult函数来限制显示长度
-    const limitedResult = formatResult(result);
-    display.textContent = limitedResult;
-    calculator.dataset.firstValue = limitedResult; // 更新为计算结果
-    // 更新表达式为计算结果 + 新操作符
-    expression = limitedResult + opSymbol;
-  } else {
-    calculator.dataset.firstValue = displayedNum;
-    // 只在不是连续操作符时拼接
-    if (previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
-      expression += opSymbol;
-    } else {
-      // 连续操作符时替换最后一个操作符
-      expression = expression.replace(/[+\-×÷]$/, opSymbol);
+      let opSymbol = '';
+      if (action === 'add') opSymbol = '+';
+      if (action === 'subtract') opSymbol = '-';
+      if (action === 'multiply') opSymbol = '×';
+      if (action === 'divide') opSymbol = '÷';
+      
+      if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+        // 需要先计算前面的表达式
+        const result = calculate(firstValue, operator, displayedNum);
+        // 使用formatResult函数来限制显示长度
+        const limitedResult = formatResult(result);
+        display.textContent = limitedResult;
+        calculator.dataset.firstValue = limitedResult; // 更新为计算结果
+        // 更新表达式为计算结果 + 新操作符
+        expression = limitedResult + opSymbol;
+      } else {
+        calculator.dataset.firstValue = displayedNum;
+        // 只在不是连续操作符时拼接
+        if (previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+          expression += opSymbol;
+        } else {
+          // 连续操作符时替换最后一个操作符
+          expression = expression.replace(/[+\-×÷]$/, opSymbol);
+        }
+      }
+      expressionDisplay.textContent = expression;
+      calculator.dataset.expression = expression;
+      calculator.dataset.operator = action;
+      calculator.dataset.previousKeyType = 'operator';
+      // 清除lastFunction，因为这是双操作数运算
+      calculator.dataset.lastFunction = '';
+      return;
     }
-  }
-  expressionDisplay.textContent = expression;
-  calculator.dataset.expression = expression;
-  calculator.dataset.operator = action;
-  calculator.dataset.previousKeyType = 'operator';
-  // 清除lastFunction，因为这是双操作数运算
-  calculator.dataset.lastFunction = '';
-  return;
-}
+
     // 清除键
     if (action === 'clear') {
       if (key.textContent === 'AC') {
@@ -198,68 +192,82 @@ keys.addEventListener('click', e => {
       return;
     }
 
-// 执行各个功能的调用
-if (action === 'reciprocal') {
-  handleCalculation('reciprocal');
-  return;
-}
+    // 执行各个功能的调用
+    if (action === 'reciprocal') {
+      handleCalculation('reciprocal');
+      return;
+    }
 
-if (action === 'square') {
-  handleCalculation('square');
-  return;
-}
+    if (action === 'square') {
+      handleCalculation('square');
+      return;
+    }
 
-if (action === 'sqrt') {
-  handleCalculation('sqrt');
-  return;
-}
+    if (action === 'sqrt') {
+      handleCalculation('sqrt');
+      return;
+    }
 
-if (action === 'percent') {
-  handleCalculation('percent');
-  return;
-}
+    if (action === 'percent') {
+      handleCalculation('percent');
+      return;
+    }
 
+    // 计算结果
+    if (action === 'calculate') {
+      let first = firstValue;
+      let second = displayedNum;
+      let op = operator;
+      const lastFunction = calculator.dataset.lastFunction;
 
-// 计算结果
-if (action === 'calculate') {
-  let first = firstValue;
-  let second = displayedNum;
-  let op = operator;
-  const lastFunction = calculator.dataset.lastFunction;
-
-  // 处理单操作数函数的连续按等号
-  if ((previousKeyType === 'calculate' || ['reciprocal','square','sqrt','percent'].includes(previousKeyType)) && lastFunction && !op) {
-    const currentNum = parseFloat(display.textContent);
-    
-    handleSingleOperandOperation(lastFunction, currentNum, false);
-    calculator.dataset.expression = expression;
-    calculator.dataset.firstValue = display.textContent;
-    calculator.dataset.previousKeyType = lastFunction;
-    return;
-  }
-
-  // 处理双操作数运算
-  if (first && op) {
-    if (previousKeyType === 'calculate') {
-      first = calculator.dataset.firstValue; 
-      second = calculator.dataset.modValue;
-    } else {
-      calculator.dataset.modValue = displayedNum;
-      if (expression && !expression.endsWith('=')) {
-        expression += '=';
+      // 处理单操作数函数的连续按等号
+      if ((previousKeyType === 'calculate' || ['reciprocal','square','sqrt','percent'].includes(previousKeyType)) && lastFunction && !op) {
+        const currentNum = parseFloat(display.textContent);
+        
+        // 直接处理连续等号，不使用通用函数避免变量作用域问题
+        const operation = operations[lastFunction];
+        if (operation) {
+          if (operation.errorCheck(currentNum)) {
+            display.textContent = 'Error';
+            expression = 'Error';
+          } else {
+            const result = operation.calculate(currentNum);
+            display.textContent = formatResult(result);
+            expression = operation.expression(currentNum.toString());
+            expressionDisplay.textContent = expression;
+          }
+          
+          calculator.dataset.expression = expression;
+          calculator.dataset.firstValue = display.textContent;
+          calculator.dataset.previousKeyType = lastFunction;
+        }
+        return;
       }
+
+      // 处理双操作数运算
+      if (first && op) {
+        if (previousKeyType === 'calculate') {
+          first = calculator.dataset.firstValue; 
+          second = calculator.dataset.modValue;
+        } else {
+          calculator.dataset.modValue = displayedNum;
+          if (expression && !expression.endsWith('=')) {
+            expression += '=';
+          }
+        }
+        const result = calculate(first, op, second);
+        display.textContent = formatResult(result);
+        calculator.dataset.firstValue = formatResult(result);
+        
+        if (previousKeyType === 'calculate') {
+          expression = first + getOperatorSymbol(op) + second + '=';
+        }
+        expressionDisplay.textContent = expression;
+        calculator.dataset.expression = expression;
+        calculator.dataset.previousKeyType = 'calculate';
+        calculator.dataset.lastFunction = '';
+      }
+      return;
     }
-    const result = calculate(first, op, second);
-    display.textContent = formatResult(result);
-    calculator.dataset.firstValue = formatResult(result);
-    
-    if (previousKeyType === 'calculate') {
-      expression = first + getOperatorSymbol(op) + second + '=';
-    }
-    expressionDisplay.textContent = expression;
-    calculator.dataset.expression = expression;
-    calculator.dataset.previousKeyType = 'calculate';
-    calculator.dataset.lastFunction = '';
   }
-  return;
-}}})
+});
