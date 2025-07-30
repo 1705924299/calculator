@@ -3,25 +3,6 @@ const keys = calculator.querySelector('.calculator__keys');
 const display = document.querySelector('.calculator__display');
 const expressionDisplay = document.querySelector('.calculator__expression');
 
-// 用于检查操作符类型
-const isOperator = (action) => {
-  return ['add', 'subtract', 'multiply', 'divide'].includes(action);
-};
-
-// 用于拼接数值的纯函数
-const appendToDisplay = (displayedNum, keyContent) => {
-  if (displayedNum === '0' || displayedNum === '') {
-    return keyContent;
-  } else {
-    return displayedNum + keyContent;
-  }
-};
-
-// 用于添加小数点的纯函数
-const addDecimal = (displayedNum) => {
-  return displayedNum + '.';
-};
-
 // 获取操作符符号
 const getOperatorSymbol = (action) => {
   if (action === 'add') return '+';
@@ -57,22 +38,6 @@ const getKeyType = (key) => {
   if (action === 'calculate') return 'calculate';
   return action;
 };
-
-// 更新计算器状态
-const updateCalculatorState = (key, calculator) => {
-  const keyType = getKeyType(key);
-
-
-  // 更新 previousKeyType
-  calculator.dataset.previousKeyType = keyType;
-
-  // 重置所有按钮的 depressed 状态
-  Array.from(key.parentNode.children).forEach(k => k.classList.remove('is-depressed'));
-  
-
-
-};
-// 事件监听
 // 事件监听
 keys.addEventListener('click', e => {
   if (e.target.matches('button')) {
@@ -221,7 +186,7 @@ function formatResult(result) {
 }
 
 // 公共处理函数
-function handleCalculation(actionType, operationFn) {
+function handleCalculation(actionType) {
   if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== actionType) {
     calculator.dataset.lastFunction = '';
   }
