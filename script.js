@@ -220,123 +220,81 @@ function formatResult(result) {
   return resultString.length > 8 ? parseFloat(result).toPrecision(8) : resultString;
 }
 
-  // 倒数 (1/x)
+// 公共处理函数
+function handleCalculation(actionType, operationFn) {
+  if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== actionType) {
+    calculator.dataset.lastFunction = '';
+  }
+
+  let numToOperate = displayedNum;
+  if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+    const tempResult = calculate(firstValue, operator, displayedNum);
+    numToOperate = formatResult(tempResult);
+    display.textContent = numToOperate;
+    expression = numToOperate;
+  }
+
+  const num = parseFloat(numToOperate);
+  let result;
+  
+  // 根据不同操作类型处理
+  if (actionType === 'reciprocal') {
+    if (num === 0) {
+      display.textContent = 'Error';
+      expression = 'Error';
+    } else {
+      result = 1 / num;
+      expression = `1/(${numToOperate})=`;
+    }
+  } else if (actionType === 'square') {
+    result = num * num;
+    expression = `(${numToOperate})²=`;
+  } else if (actionType === 'sqrt') {
+    if (num < 0) {
+      display.textContent = 'Error';
+      expression = 'Error';
+    } else {
+      result = Math.sqrt(num);
+      expression = `√(${numToOperate})=`;
+    }
+  } else if (actionType === 'percent') {
+    result = num / 100;
+    expression = `${numToOperate}%=`;
+  }
+
+  // 显示结果
+  display.textContent = formatResult(result);
+  expressionDisplay.textContent = expression;
+  
+  // 更新状态
+  calculator.dataset.expression = expression;
+  calculator.dataset.firstValue = formatResult(result);
+  calculator.dataset.previousKeyType = actionType;
+  calculator.dataset.lastFunction = actionType;
+  calculator.dataset.operator = '';
+}
+
+// 执行各个功能的调用
 if (action === 'reciprocal') {
-  if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'reciprocal') {
-    calculator.dataset.lastFunction = '';
-  }
-  
-  let numToReciprocal = displayedNum;
-  if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
-    const tempResult = calculate(firstValue, operator, displayedNum);
-    numToReciprocal = formatResult(tempResult);
-    display.textContent = numToReciprocal;
-    expression = numToReciprocal;
-  }
-  
-  const num = parseFloat(numToReciprocal);
-  if (num === 0) {
-    display.textContent = 'Error';
-    expression = 'Error';
-  } else {
-    const result = 1 / num;
-    display.textContent = formatResult(result);
-    expression = `1/(${numToReciprocal})=`;
-  }
-  expressionDisplay.textContent = expression;
-  calculator.dataset.expression = expression;
-  calculator.dataset.firstValue = formatResult(1 / num);
-  calculator.dataset.previousKeyType = 'reciprocal';
-  calculator.dataset.lastFunction = 'reciprocal';
-  calculator.dataset.operator = '';
+  handleCalculation('reciprocal');
   return;
 }
 
-// 平方 (x²)
 if (action === 'square') {
-  if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'square') {
-    calculator.dataset.lastFunction = '';
-  }
-  
-  let numToSquare = displayedNum;
-  if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
-    const tempResult = calculate(firstValue, operator, displayedNum);
-    numToSquare = formatResult(tempResult);
-    display.textContent = numToSquare;
-    expression = numToSquare;
-  }
-  
-  const num = parseFloat(numToSquare);
-  const result = num * num;
-  display.textContent = formatResult(result);
-  expression = `(${numToSquare})²=`;
-  expressionDisplay.textContent = expression;
-  calculator.dataset.expression = expression;
-  calculator.dataset.firstValue = formatResult(result);
-  calculator.dataset.previousKeyType = 'square';
-  calculator.dataset.lastFunction = 'square';
-  calculator.dataset.operator = '';
+  handleCalculation('square');
   return;
 }
 
-// 开根号 (√x)
 if (action === 'sqrt') {
-  if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'sqrt') {
-    calculator.dataset.lastFunction = '';
-  }
-  
-  let numToSqrt = displayedNum;
-  if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
-    const tempResult = calculate(firstValue, operator, displayedNum);
-    numToSqrt = formatResult(tempResult);
-    display.textContent = numToSqrt;
-    expression = numToSqrt;
-  }
-  
-  const num = parseFloat(numToSqrt);
-  if (num < 0) {
-    display.textContent = 'Error';
-    expression = 'Error';
-  } else {
-    const result = Math.sqrt(num);
-    display.textContent = formatResult(result);
-    expression = `√(${numToSqrt})=`;
-  }
-  expressionDisplay.textContent = expression;
-  calculator.dataset.expression = expression;
-  calculator.dataset.firstValue = formatResult(Math.sqrt(num));
-  calculator.dataset.previousKeyType = 'sqrt';
-  calculator.dataset.lastFunction = 'sqrt';
-  calculator.dataset.operator = '';
+  handleCalculation('sqrt');
   return;
 }
 
-// 百分比 (%)
 if (action === 'percent') {
-  if (previousKeyType === 'calculate' && calculator.dataset.lastFunction && calculator.dataset.lastFunction !== 'percent') {
-    calculator.dataset.lastFunction = '';
-  }
-  
-  let numToPercent = displayedNum;
-  if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
-    const tempResult = calculate(firstValue, operator, displayedNum);
-    numToPercent = formatResult(tempResult);
-    display.textContent = numToPercent;
-    expression = numToPercent;
-  }
-  
-  const num = parseFloat(numToPercent);
-  const result = num / 100;
-  display.textContent = formatResult(result);
-  expression = `${numToPercent}%=`;
-  expressionDisplay.textContent = expression;
-  calculator.dataset.expression = expression;
-  calculator.dataset.firstValue = formatResult(result);
-  calculator.dataset.previousKeyType = 'percent';
-  calculator.dataset.lastFunction = 'percent';
-  calculator.dataset.operator = '';
+  handleCalculation('percent');
   return;
 }
+
 
 // 计算结果
 if (action === 'calculate') {
